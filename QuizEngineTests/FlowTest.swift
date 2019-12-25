@@ -15,29 +15,53 @@ class FlowTest: XCTestCase {
         let router = RouterSpy()
         let sut = Flow(questions:[],router:router)
         sut.start()
-        XCTAssertEqual(router.questionCount, 0)
+        XCTAssert(router.routedQuestions.isEmpty)
     }
     
-    func test_start_WithOneQuestions_RouteToQuestion(){
-        let router = RouterSpy()
-        let sut = Flow(questions: ["01"], router:router)
-        sut.start()
-        XCTAssertEqual(router.questionCount, 1)
-    }
+
     
     func test_start_WithOneQuestions_RouteToCorrectQuestion(){
         let router = RouterSpy()
         let sut = Flow(questions: ["01"], router:router)
         sut.start()
-        XCTAssertEqual(router.questionCount, "01")
+        XCTAssertEqual(router.routedQuestions, ["01"])
+    }
+    
+    func test_start_WithOneQuestions_RouteToCorrectQuestion_2(){
+        let router = RouterSpy()
+        let sut = Flow(questions: ["Q2"], router:router)
+        sut.start()
+        XCTAssertEqual(router.routedQuestions, ["Q2"])
+    }
+    func test_start_WithTwoQuestions_RouteToFirstQuestion(){
+        let router = RouterSpy()
+        let sut = Flow(questions: ["Q1", "Q2"], router:router)
+        sut.start()
+        XCTAssertEqual(router.routedQuestions, ["Q1"])
+    }
+    
+    func test_startTwice_WithTwoQuestions_RouteToFirstQuestionTwice(){
+        let router = RouterSpy()
+        let sut = Flow(questions: ["Q1", "Q2"], router:router)
+        sut.start()
+        sut.start()
+        XCTAssertEqual(router.routedQuestions, ["Q1","Q1"])
+    }
+    
+    func test_start_AndAnswerFirstQuestion_WithTwoQuestions_RouteToSecondQuestion(){
+        let router = RouterSpy()
+        let sut = Flow(questions: ["Q1", "Q2"], router:router)
+        sut.start()
+        router.answerCallback("A1")
+        XCTAssertEqual(router.routedQuestions, ["Q1","Q2"])
     }
     
     class RouterSpy:Router{
-        var questionCount:Int = 0
-        var routedQuestion:String?
-        func routeTo(question: String) {
-            questionCount += 1
-            routedQuestion = question
+        var answerCallback:((String)-> Void) = {_ in}
+        var routedQuestions:[String] = []
+        func routeTo(question: String, answerCallback:@escaping (String)-> Void) {
+            routedQuestions.append(question)
+            self.answerCallback = answerCallback
         }
     }
 }
